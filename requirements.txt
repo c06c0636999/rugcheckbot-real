@@ -1,0 +1,6 @@
+requests
+python-dotenv
+solana
+aiohttp
+websockets
+pandas
