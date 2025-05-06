@@ -1,15 +1,26 @@
 import requests
 import os
 
+HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
+
 def get_new_tokens():
-    headers = { "Authorization": f"Bearer {os.getenv('HELIUS_API_KEY')}" }
-    url = "https://api.helius.xyz/v0/tokens/most-recent?limit=10"
-    response = requests.get(url, headers=headers)
+    url = f"https://api.helius.xyz/v0/addresses?api-key={HELIUS_API_KEY}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        print("獲取新幣失敗:", response.text)
+        return []
+
     data = response.json()
     tokens = []
     for item in data:
-        tokens.append({
-            "name": item.get("tokenInfo", {}).get("name", "Unknown"),
-            "address": item.get("tokenAddress")
-        })
+        if item.get("token", {}).get("is_native"):
+            continue
+        token_info = {
+            "name": item["token"]["name"],
+            "address": item["token"]["mint"],
+            "symbol": item["token"].get("symbol", ""),
+            "decimals": item["token"].get("decimals", 0)
+        }
+        tokens.append(token_info)
+
     return tokens
