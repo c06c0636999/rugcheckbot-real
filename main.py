@@ -4,36 +4,32 @@ from rugcheck_engine import is_token_safe
 from potential_moon_shot_engine import evaluate_token_potential
 from telegram_bot import send_alert
 
-SCAN_INTERVAL = 180  # 每 3 分鐘掃描一次
+SCAN_INTERVAL = 180  # 每三分鐘掃描一次
 
 def main_loop():
-    print("RugCheckBot 已啟動...")
+    print("RugCheckBot 已啟動，開始掃描...")
     seen_tokens = set()
 
     while True:
         try:
             print("\n--- 新一輪掃描開始 ---")
             new_tokens = get_new_tokens()
-            print(f"發現 {len(new_tokens)} 筆代幣")
+            print(f"共發現 {len(new_tokens)} 個交易池")
 
             for token in new_tokens:
                 if token['address'] not in seen_tokens:
-                    print(f"\n[新幣發現] 名稱：{token['name']}，地址：{token['address']}")
+                    print(f"發現新幣：{token['name']} ({token['address']})")
                     seen_tokens.add(token['address'])
 
                     if is_token_safe(token['address']):
-                        print("→ 通過 rugcheck 檢查，進行爆發潛力分析...")
+                        print(f"{token['name']} 通過 rug 檢查，進行潛力評估中...")
                         potential_info = evaluate_token_potential(token)
-                        print(f"→ 分析結果：FDV={potential_info['FDV']}，風險={potential_info['Rug風險']}")
                         send_alert(token, potential_info)
-                        print("→ 已送出 Telegram 推播")
                     else:
-                        print("→ 未通過 rug 檢查，略過")
-                else:
-                    print(f"[跳過重複] {token['name']} ({token['address']})")
+                        print(f"{token['name']} 未通過 rug 檢查，已略過")
 
         except Exception as e:
-            print("⚠️ 發生錯誤：", e)
+            print("錯誤發生：", e)
 
         time.sleep(SCAN_INTERVAL)
 
